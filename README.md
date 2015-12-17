@@ -15,3 +15,10 @@ I put these in my own .env file in the folder this repository is in:
 export GD_CLIENTID=[redacted]
 export GD_CLIENTSECRET=[redacted]
 ```
+
+## Usage
+
+```
+USAGE: python google_spreadsheet_test.py [sheet_id]
+```
+where "sheet_id" is the long random string you get in the url when you visit your google sheet in the web.
