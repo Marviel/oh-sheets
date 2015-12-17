@@ -15,9 +15,12 @@ import xml.dom.minidom
 import xml.etree.ElementTree as ET
 import re
 import sys
+import webbrowser
 
 
 USAGESTR = "USAGE: python google_spreadsheet_test.py [sheet_id]"
+ROW = 6 # The row of the cell we're getting (1 indexed)
+COL = 5 # The col of the cell we're getting (1 indexed)
 
 #Get sheet arg.
 if len(sys.argv) != 2:
@@ -28,7 +31,7 @@ SHEET_ID = sys.argv[1]
 
 
 def get_cell_obj(client,sheet,page,r, c):
-  return client.get_cell(spreadsheet_key,1,1,1)
+  return client.get_cell(spreadsheet_key,1,ROW,COL)
 
 def get_cell_content(client,sheet,page,r,c):
   cell_obj = get_cell_obj(client,sheet,page,r,c)
@@ -38,13 +41,16 @@ def get_cell_content(client,sheet,page,r,c):
     mtch = str(child.tag).split('}') #This splits the tag from the prefix.
     actual_tag = mtch[1] if len(mtch) > 1 else mtch[0] #This gives us the actual tag despite prefixes
 
+
+    print str(child.tag) + " ----> " + str(child.attrib)
+    print "tag found: " + actual_tag
+
     #We want content
     if actual_tag == "content":
       full_match_tag = child.tag
       break
 
-    # print str(child.tag) + " ----> " + str(child.attrib)
-    # print "tag found: " + actual_tag
+   
 
   cell = root.find(full_match_tag)
   return cell.text
@@ -60,10 +66,11 @@ if client_id is None or client_secret is None:
 
 flow = OAuth2WebServerFlow(client_id, client_secret, scope, redirect_uri)
 
-#Do the flow step 1
+# Do the flow step 1
 auth_uri = flow.step1_get_authorize_url()
 
-Popen(['open', auth_uri])
+# Use default web browser to show the authentication prompt.
+webbrowser.open_new_tab(auth_uri)
 
 # # XXX parse url and retrieve from header
 code = raw_input('copy code from browser and enter: ')
@@ -76,14 +83,13 @@ print 'access token: %s'  % cred.access_token
 print 'refresh token: %s' % cred.refresh_token
 
 gd_client = gdata.spreadsheets.client.SpreadsheetsClient()
-#gd_client = gdata.docs.service.DocsService()
 auth2token = gdata.gauth.OAuth2TokenFromCredentials(cred)
 gd_client = auth2token.authorize(gd_client)
 
 
 #Printing bare xml content in cell object
 spreadsheet_key=SHEET_ID
-cell = gd_client.get_cell(spreadsheet_key, 1, 1, 1) 
+cell = gd_client.get_cell(spreadsheet_key, 1, ROW, COL) 
 print cell
 
 #Pretty printing xml content in cell object
@@ -91,7 +97,7 @@ xml = xml.dom.minidom.parseString(str(cell)) # or xml.dom.minidom.parseString(xm
 pretty_xml_as_string = xml.toprettyxml()
 print pretty_xml_as_string
 
-cell_content = get_cell_content(gd_client,spreadsheet_key,1,1,1)
-print "got content: " + cell_content
+cell_content = get_cell_content(gd_client,spreadsheet_key,1,ROW,COL)
+print "got content: " + str(cell_content)
 
 exit(0)
